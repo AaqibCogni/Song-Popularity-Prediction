@@ -135,8 +135,4 @@ if __name__ == "__main__":
         artist = all_song_data['Artist'][i]
         all_song_data['Popularity'][i] = get_popularity(track, artist)
 
-
-# In[ ]:
-
-
 all_song_data.to_excel(r'D\....\all_song_data_with_popularity',index=False)
