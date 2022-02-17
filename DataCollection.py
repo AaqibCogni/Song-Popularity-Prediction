@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
 import lyricsgenius as lg
 import billboard
 import numpy
@@ -18,10 +14,6 @@ from spotipy.client import SpotifyException
 from textdistance import cosine
 import warnings
 warnings.filterwarnings("ignore")
-
-
-# In[ ]:
-
 
 """
 Function collect_hot100_from_billboard collects the Top 100 songs from billboard platform from a Data range passed to it as parameters.
@@ -46,10 +38,6 @@ def collect_hot100_from_billboard(start_year,end_year):
             dataset = dataset.append(row, ignore_index=True)
     return dataset
 all_songs = collect_hot100_from_billboard(2000,2020)
-
-
-# In[ ]:
-
 
 """
 Function get_lyrics extracts lyrics of the songs present in all songs data based on Song Title and Artist Name
@@ -86,17 +74,13 @@ def get_lyrics(all_songs):
     return all_song_data
 all_song_data = get_lyrics(all_songs)
 
-
-# In[ ]:
-
-
 """
 Function to get the popularity score of the songs from spotify based on track and artist
 
 """
 API_MAX_OFFSET = 150
 API_MAX_LIMIT = 50
-auth_manager = SpotifyClientCredentials(client_id,4
+auth_manager = SpotifyClientCredentials(client_id,
                                        client_secret)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 def is_similar(A, B, rate=0.75):
@@ -151,10 +135,6 @@ if __name__ == "__main__":
         track = all_song_data['Song Title'][i]
         artist = all_song_data['Artist'][i]
         all_song_data['Popularity'][i] = get_popularity(track, artist)
-
-
-# In[ ]:
-
 
 all_song_data.to_excel(r'D\....\all_song_data_with_popularity',index=False)
 

@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
 import re
 import random
 from langdetect import detect_langs
@@ -28,19 +24,12 @@ from tqdm import tqdm
 # 7. Check to see if the length of the word is greater than 2
 # 8. Detect and replace contractions with original word.
 # 9. Convert the word to lowercase
-# 
-
-# In[ ]:
-
 
 # Import Dataset
 all_song_data = pd.read_excel(r'"D:\.....\All Song Data with Popularity.xlsx"')
 
 
 # # Functions Created For Preprocessing
-
-# In[ ]:
-
 
 # Detect Non English Songs from the list of Songs
 def get_eng_prob(text):
@@ -226,10 +215,3 @@ def preprocessing_lyrics(df):
     return df
 
 all_song_data = preprocessing_lyrics(all_song_data)
-
-
-# In[ ]:
-
-
-
-
