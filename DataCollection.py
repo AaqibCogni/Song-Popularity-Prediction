@@ -2,7 +2,7 @@
 # coding: utf-8
 import lyricsgenius as lg
 import billboard
-import numpy
+import numpy as np
 from datetime import datetime
 import pandas as pd
 # from gc import is_finalized
@@ -12,6 +12,9 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy.client import SpotifyException
 from textdistance import cosine
+import torch
+from torch.utils.data import TensorDataset, DataLoader
+from typing import Optional
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -128,6 +131,14 @@ def get_popularity(track, artist):
         if offset < API_MAX_LIMIT:
             break
     return max_popularity
+
+def create_loader(X: np.ndarray, y: Optional(np.ndarray), shuffle: bool = False, batch_size: int = 1) -> DataLoader:
+    if y is not None:
+        dataset = TensorDataset(torch.Tensor(X), torch.Tensor(y))
+    else:
+        dataset = TensorDataset(torch.Tensor(X))
+    return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size)
+
 
 if __name__ == "__main__":
     all_song_data['Popularity'] = ''
