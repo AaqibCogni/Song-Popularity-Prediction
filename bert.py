@@ -8,6 +8,7 @@ import transformers as ppb
 class Bert:
 
     def __init__(self, device: torch.device) -> None:
+        self.INPUT_LENGTH = 512
         self.OUTPUT_LENGTH = 768
         self.device = device
 
@@ -16,8 +17,8 @@ class Bert:
                                                             ppb.DistilBertTokenizer, 
                                                             'distilbert-base-uncased')
         # Load pretrained model/tokenizer
-        tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
-        model = model_class.from_pretrained(pretrained_weights).to(device)
+        self.tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
+        self.model = model_class.from_pretrained(pretrained_weights).to(device)
 
     def tokenize(self, texts: List[str]) -> np.ndarray:
         ls = []
@@ -25,22 +26,21 @@ class Bert:
         if not texts:
             raise Exception("Empty dataset.")
         
-        tokens = np.array([self.tokenizer.encode(text, add_special_tokens=False) 
-                           for text in texts])
-        
-        if len(texts) == 1:
-            padded = tokens
-        else:
-            max_len = max(map(len, tokens))
-            padded = np.array([i + [0]*(max_len-len(i) for i in tokens)])
+        def tokenizer(text):
+            tokenized = self.tokenizer.encode(text, add_special_tokens=False)
+            trimmed = tokenized[:self.INPUT_LENGTH]
+            padded = trimmed + [0] * (self.INPUT_LENGTH - len(trimmed))
+            return padded
 
-        attention_mask = np.where(padded != 0, 1, 0)
+        tokens = np.array([tokenizer(text) for text in texts])
+        attention_mask = np.where(tokens != 0, 1, 0)
 
-        for i, row in enumerate(padded):
-            ii = torch.tensor(row.reshape(1, padded.shape[1]), device=self.device).to(torch.int64)
-            am = torch.tensor(attention_mask[i].reshape(1, padded.shape[1]), device=self.device).to(torch.int64)
-            last_hidden_states = self.model(ii, attention_mask=am)
-            features = last_hidden_states[0][:, 0, :].cpu().detach().numpy().reshape(self.OUTPUT_LENGTH, ).tolist()
-            ls.append(features)
+        with torch.no_grad():
+            for i, row in enumerate(tokens):
+                ii = torch.tensor(row.reshape(1, tokens.shape[1]), device=self.device).to(torch.int64)
+                am = torch.tensor(attention_mask[i].reshape(1, tokens.shape[1]), device=self.device).to(torch.int64)
+                last_hidden_states = self.model(ii, attention_mask=am)
+                features = last_hidden_states[0][:, 0, :].cpu().detach().numpy().reshape(self.OUTPUT_LENGTH, ).tolist()
+                ls.append(features)
         
         return np.array(ls)
