@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import re
 import random
 from langdetect import detect_langs
@@ -18,7 +12,7 @@ warnings.filterwarnings("ignore")
 
 
 # # Preprocessing Lyrics field of All Songs Data
-# 
+#
 # In the Preprocessing phase we do the following steps in the order below:-
 # 1. Remove the song title that appears in the lyrics.
 # 2. Begin by removing round, square (along with text ) and curly brackets.
@@ -30,20 +24,8 @@ warnings.filterwarnings("ignore")
 # 8. Detect and replace contractions with original word.
 # 9. Convert the word to lowercase
 
-# In[7]:
-
-
 # Import Dataset
 English_songs = pd.read_excel(r"D:\Study Material\Personal Projects\Song Popularity by Lyrics\Song Popularity\ English Songs_with_Lyrics.xlsx")
-English_songs.shape
-
-
-# # Functions Created For Preprocessing
-
-# In[45]:
-
-
-#sno = nltk.stem.SnowballStemmer("english")
 
 # Remove song title from lyrics
 def remove_song_title(lyrics):
@@ -52,9 +34,8 @@ def remove_song_title(lyrics):
     lyrics = lyrics[index:]
     return lyrics
 
-
 # Function to replace contractions with actual words
-def contracted(phrase): 
+def contracted(phrase):
     phrase = re.sub(r"ain't", "am not",phrase)
     phrase = re.sub("aren't", "are not",phrase)
     phrase = re.sub("can't", "cannot",phrase)
@@ -191,17 +172,17 @@ def preprocessing_lyrics(df):
     print('Number of square brackets: {}'.format(len(text_in_square_brackets)))
     text_in_curly_brackets = sum(list(df['Lyrics'].map(lambda s: re.findall(r'\{(.*?)\}',str(s)))), [])
     print('Number of Curly brackets: {}'.format(len(text_in_curly_brackets)))
-    
+
     # remove round brackets but not text within
     df['Lyrics'] = df['Lyrics'].map(lambda s: re.sub(r'\(|\)', '', str(s)))
     # remove square brackets and text within
     df['Lyrics'] = df['Lyrics'].map(lambda s: re.sub(r'\[(.*?)\] ', '', str(s)))
     # remove Curly brackets and text within
     df['Lyrics'] = df['Lyrics'].map(lambda s: re.sub(r'\{|\} ', '', str(s)))
-    
+
     # Check if tags are present in the lyrics field
     df['Tag Present'] = df['Lyrics'].map(lambda s : bool(BeautifulSoup(str(s), "html.parser").find()))
-    
+
     i = 0
     final_lyrics = []
     s = ""
@@ -211,7 +192,7 @@ def preprocessing_lyrics(df):
         lyrics = remove_song_title(lyrics)
         lyricsHTMLCleaned = cleanhtml(lyrics)
         lyricsHTMLCleaned = contracted(lyricsHTMLCleaned)
-        for eachWord in lyricsHTMLCleaned.split(): 
+        for eachWord in lyricsHTMLCleaned.split():
             for sentencePunctCleaned in cleanpunc(eachWord).split():
                 if((sentencePunctCleaned.isalpha()) & (len(sentencePunctCleaned)>2)):
                     sentenceLower = sentencePunctCleaned.lower()
@@ -219,13 +200,8 @@ def preprocessing_lyrics(df):
                     filteredLyrics.append(sentenceLower)
         EachLyrics = ' '.join(filteredLyrics)
         final_lyrics.append(EachLyrics)
-    df['cleanedLyrics'] = final_lyrics    
+    df['cleanedLyrics'] = final_lyrics
     return df
 english_songs_clean = preprocessing_lyrics(English_songs)
 
-
-# In[47]:
-
-
-english_songs_clean.to_excel(r"D:\Study Material\Personal Projects\Song Popularity by Lyrics\Song Popularity\English_Songs_Clean.xlsx",index=False)
-
+english_songs_clean.to_excel(r"D:\......\English_Songs_Clean.xlsx",index=False)
