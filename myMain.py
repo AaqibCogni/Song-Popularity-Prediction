@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
+
+# In[1]:
+
+
 import re
 import random
 from langdetect import detect_langs
@@ -9,15 +13,16 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem.wordnet import WordNetLemmatizer
 from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
 
 
 # # Preprocessing Lyrics field of All Songs Data
 # 
-# In the Preprocessing phase we do the following in the order below:-
-# 
-# 1. Begin by removing round, square (along with text ) and curly brackets.
-# 2. Remove line breaks from the text.
-# 3. Detect and Remove non English Songs
+# In the Preprocessing phase we do the following steps in the order below:-
+# 1. Remove the song title that appears in the lyrics.
+# 2. Begin by removing round, square (along with text ) and curly brackets.
+# 3. Remove line breaks from the text.
 # 4. Remove any punctuations or limited set of special characters like , or . or # etc.
 # 5. Check if tags are present
 # 6. Check if the word is made up of english letters and is not alpha-numeric
@@ -25,19 +30,28 @@ from tqdm import tqdm
 # 8. Detect and replace contractions with original word.
 # 9. Convert the word to lowercase
 
+# In[7]:
+
+
 # Import Dataset
-all_song_data = pd.read_excel(r'"D:\.....\All Song Data with Popularity.xlsx"')
+English_songs = pd.read_excel(r"D:\Study Material\Personal Projects\Song Popularity by Lyrics\Song Popularity\ English Songs_with_Lyrics.xlsx")
+English_songs.shape
 
 
 # # Functions Created For Preprocessing
 
-# Detect Non English Songs from the list of Songs
-def get_eng_prob(text):
-    detections = detect_langs(text)
-    for detection in detections:
-        if detection.lang == 'en':
-            return detection.prob
-    return 0
+# In[45]:
+
+
+#sno = nltk.stem.SnowballStemmer("english")
+
+# Remove song title from lyrics
+def remove_song_title(lyrics):
+    substring = 'Lyrics'
+    index = lyrics.find(substring) + len(substring)
+    lyrics = lyrics[index:]
+    return lyrics
+
 
 # Function to replace contractions with actual words
 def contracted(phrase): 
@@ -185,13 +199,6 @@ def preprocessing_lyrics(df):
     # remove Curly brackets and text within
     df['Lyrics'] = df['Lyrics'].map(lambda s: re.sub(r'\{|\} ', '', str(s)))
     
-    # Detect and remove non english songs
-    df['en_prob'] = df['Lyrics'].map(get_eng_prob)
-    print('Number of english songs: {}'.format(sum(df['en_prob'] >= 0.8)))
-    print('Number of non-english songs: {}'.format(sum(df['en_prob'] < 0.8)))  
-    df = df.loc[df['en_prob']>= 0.8]
-    df.reset_index(drop=True,inplace=True)
-    
     # Check if tags are present in the lyrics field
     df['Tag Present'] = df['Lyrics'].map(lambda s : bool(BeautifulSoup(str(s), "html.parser").find()))
     
@@ -201,17 +208,24 @@ def preprocessing_lyrics(df):
     for lyrics in tqdm(df["Lyrics"].values):
         filteredLyrics = []
         EachLyrics = ""
+        lyrics = remove_song_title(lyrics)
         lyricsHTMLCleaned = cleanhtml(lyrics)
         lyricsHTMLCleaned = contracted(lyricsHTMLCleaned)
         for eachWord in lyricsHTMLCleaned.split(): 
             for sentencePunctCleaned in cleanpunc(eachWord).split():
                 if((sentencePunctCleaned.isalpha()) & (len(sentencePunctCleaned)>2)):
                     sentenceLower = sentencePunctCleaned.lower()
-                    s = (sno.stem(sentenceLower))
-                    filteredLyrics.append(s)
+                    #s = (sno.stem(sentenceLower))
+                    filteredLyrics.append(sentenceLower)
         EachLyrics = ' '.join(filteredLyrics)
         final_lyrics.append(EachLyrics)
     df['cleanedLyrics'] = final_lyrics    
     return df
+english_songs_clean = preprocessing_lyrics(English_songs)
 
-all_song_data = preprocessing_lyrics(all_song_data)
+
+# In[47]:
+
+
+english_songs_clean.to_excel(r"D:\Study Material\Personal Projects\Song Popularity by Lyrics\Song Popularity\English_Songs_Clean.xlsx",index=False)
+
